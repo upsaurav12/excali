@@ -11,6 +11,7 @@ interface Rectangle {
   height: number;
   width: number;
   draggable: boolean;
+  cornerRadius: number;
 }
 /*
 export const Canvas = () => {
@@ -147,12 +148,15 @@ export const Canvas = () => {
   const stageRef = useRef<Konva.Stage | null>(null); // Initialize the ref with proper typing
   const [rectangles, setRectangles] = useState<Rectangle[]>([]); // Specify that rectangles are objects
   const isPainting = useRef(false);
+  const [isClicked , setIsClicked] = useState<boolean>(false);
   const currentShapeId = useRef<string | undefined>(undefined);
-
+  
   const onPointerDown = () => {
     const stage = stageRef.current; // Now stageRef is properly linked
     if(stage) {
       const { x, y } = stage.getPointerPosition() as { x: number; y: number }; // Type the position
+      //const pos = stage.getPointerPosition();
+      console.log(x, y);
     const id = uuidv4();
 
     currentShapeId.current = id;
@@ -167,9 +171,11 @@ export const Canvas = () => {
         height: 80,
         width: 120,
         draggable: true,
+        cornerRadius: 25,
       },
     ]);
     }
+    setIsClicked(false);
   };
 
   const onPointerMove = () => {
@@ -192,20 +198,33 @@ export const Canvas = () => {
       })
     );
     }
+    //setIsClicked(false)
   };
 
   const onPointerUp = () => {
     isPainting.current = false;
   };
 
+  const handleRectClicked = () => {
+    console.log("Rect was clicke??")
+    setIsClicked(!isClicked)
+    console.log(isClicked);
+  }
+
+  const handleText = () => {
+    console.log("White board was clicked")
+  }
+
   return (
-    <div>
+    <div className='relative'>
+      <button type='submit' className='absolute top-4 left-[50%] z-10 border-2 p-[10px] rounded-[1rem] border-black' onClick={() =>handleRectClicked()}>Rectangle</button>
       <Stage
+        onClick={handleText}
         width={window.innerWidth}
         height={window.innerHeight}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerDown={onPointerDown}
+        onPointerDown={isClicked ? onPointerDown : undefined}
         ref={stageRef} // Attach the ref to the Stage component
       >
         <Layer>
@@ -225,8 +244,9 @@ export const Canvas = () => {
               width={rect.width}
               height={rect.height}
               strokeWidth={2}
-              stroke="red"
+              stroke="black"
               draggable={rect.draggable}
+              cornerRadius={rect.cornerRadius}
             />
           ))}
         </Layer>
