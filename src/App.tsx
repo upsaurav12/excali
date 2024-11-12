@@ -1,12 +1,9 @@
 import './App.css'
-import { Button } from './components/ui/button'
+import { Canvas } from './parts/canvas'
 function App() {
 
   return (
-    <>
-      <h1 className='text-4xl'>Excalidraw</h1>
-      <Button className='bg-sky-500 ml-2'>Hello </Button>
-    </>
+    <Canvas/>
   )
 }
 
