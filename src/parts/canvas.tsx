@@ -310,8 +310,8 @@ export const Canvas = () => {
             stroke="black"
             strokeWidth={3}
             onClick={() => handleSelect(circle.id )}
-
             draggable
+            
             />
           ))}
           {rectangles.map((rect) => (
@@ -341,8 +341,9 @@ export const Canvas = () => {
                   );
                 }}
               />
-
-              {selectedId && (
+            </React.Fragment>
+          ))}
+          {selectedId && (
                 <Transformer
                   ref={transformerRef}
                   resizeEnabled={true}
@@ -350,8 +351,6 @@ export const Canvas = () => {
                   anchorSize={6}
                 />
               )}
-            </React.Fragment>
-          ))}
         </Layer>
       </Stage>
 
