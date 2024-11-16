@@ -1,8 +1,7 @@
-//import { useEffect, useRef, useState } from "react";
-import Konva from 'konva';
-import { useRef, useState } from 'react';
-import {Stage , Layer , Rect } from 'react-konva';
-import {v4 as uuidv4} from 'uuid'
+import React, { useState, useRef } from "react";
+import { Stage, Layer, Rect, Transformer , Text as KonvaText } from "react-konva";
+import { v4 as uuidv4 } from "uuid";
+import Konva from "konva";
 
 interface Rectangle {
   id: string;
@@ -11,246 +10,217 @@ interface Rectangle {
   height: number;
   width: number;
   draggable: boolean;
-  cornerRadius: number;
+  cornerRadius?: number;
 }
-/*
-export const Canvas = () => {
-  const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState({ x: 0, y: 0 });
-  const [rectangles, setRectangles] = useState([]); // Store all rectangles
-  const [input , setInput ] = useState("");
-  const [inputPos , setInputPost] = useState()
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    context.lineWidth = 2;
-    context.lineCap = "round";
-    context.strokeStyle = "black";
-  }, []);
-
-  const handleshape = ({nativeEvent}) => {
-    
-    const {offsetX , offsetY} = nativeEvent;
-
-    rectangles.forEach((rect) => {
-      if (
-        offsetX >= rect.x &&
-        offsetX <= rect.x + rect.width &&
-        offsetY >= rect.y &&
-        offsetY <= rect.y + rect.height
-      ) {
-        console.log("Rectangle clicked:", rect); // Log clicked rectangle
-        console.log("All Rectangles:", rectangles); // Log all rectangles
-      }
-    });
-  }
-
-  const startDrawing = ({ nativeEvent }) => {
-    const { offsetX, offsetY } = nativeEvent;
-    setStartPoint({ x: offsetX, y: offsetY });
-    setIsDrawing(true);
-  };
-
-  const finishDrawing = ({ nativeEvent }) => {
-    if (!isDrawing) return;
-
-    const { offsetX, offsetY } = nativeEvent;
-    const rectWidth = offsetX - startPoint.x;
-    const rectHeight = offsetY - startPoint.y;
-
-    // Save the current rectangle to the array
-    setRectangles((prevRectangles) => [
-      ...prevRectangles,
-      { x: startPoint.x, y: startPoint.y, width: rectWidth, height: rectHeight },
-    ]);
-
-    setIsDrawing(false); // Stop drawing
-  };
-
-  const handleDoubleClick = ({nativeEvent} , e) => {
-    const {offsetX , offsetY} = nativeEvent;
-    setInputPost({x : offsetX , y: offsetY})
-    console.log(offsetX, offsetY , e);
-    setInput("")
-  }
-
-  const handleinput = (e) => {
-    setInput(e.target.value);
-  }
-
-  const inputBlur = () => {
-    if (input.trim()) {
-      const canvas  = canvasRef.current;
-      const context = canvas.getContext("2d");
-
-      context.font = "16px Arial";
-      context.fillText(input , inputPos.x , inputPos.y);
-    }
-
-    setInputPost(null);
-    setInput("");
-  }
-
-  const drawAllRectangles = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
-    rectangles.forEach((rect) => {
-      context.beginPath();
-      context.rect(rect.x, rect.y, rect.width, rect.height);
-      context.stroke();
-    });
-  };
-
-  useEffect(() => {
-    drawAllRectangles(); // Draw all stored rectangles whenever `rectangles` state changes
-  }, [rectangles]);
-
-  return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        width={1715}
-
-        height={845}
-        style={{ border: "1px solid black" }}
-        onMouseDown={startDrawing}
-        onMouseUp={finishDrawing}
-        onClick={handleshape}
-        onDoubleClick={handleDoubleClick}
-        className="ml-1 mt-1"
-      />
-
-      {inputPos && (
-        <input
-        type="text"
-        value={input}
-        onChange={handleinput}
-        onBlur={inputBlur}
-        style={{
-          position: "absolute",
-          left: inputPos.x,
-          top: inputPos.y,
-          background: "transparent",
-          border: "1px solid black",
-          zIndex: 10,
-        }}
-        autoFocus
-        />
-      )}
-    </div>
-  );
-};*/
+interface Text {
+  id: string;
+  x: number;
+  y:number;
+  text: string;
+}
 
 export const Canvas = () => {
-  const stageRef = useRef<Konva.Stage | null>(null); // Initialize the ref with proper typing
-  const [rectangles, setRectangles] = useState<Rectangle[]>([]); // Specify that rectangles are objects
+  const stageRef = useRef<Konva.Stage | null>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
+  const [rectangles, setRectangles] = useState<Rectangle[]>([]);
+  const [isClicked, setIsClicked] = useState<boolean>(false);
+  const [isText , setIsText ] = useState<boolean> (false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const isPainting = useRef(false);
-  const [isClicked , setIsClicked] = useState<boolean>(false);
+  const [inputPos , setInputPos] = useState<{x: number , y: number} | null>(null)
+  const [text , setText] = useState<Text[]>([]);
   const currentShapeId = useRef<string | undefined>(undefined);
-  
+
+  // Add a new rectangle
   const onPointerDown = () => {
-    const stage = stageRef.current; // Now stageRef is properly linked
-    if(stage) {
-      const { x, y } = stage.getPointerPosition() as { x: number; y: number }; // Type the position
-      //const pos = stage.getPointerPosition();
-      console.log(x, y);
-    const id = uuidv4();
+    const stage = stageRef.current;
+    if (stage) {
+      const { x, y } = stage.getPointerPosition() as { x: number; y: number };
+      const id = uuidv4();
+      currentShapeId.current = id;
+      isPainting.current = true;
 
-    currentShapeId.current = id;
-    isPainting.current = true;
+      setRectangles((prev) => [
+        ...prev,
+        {
+          id,
+          x,
+          y,
+          height: 80,
+          width: 120,
+          draggable: true,
+          cornerRadius: 25,
+        },
+      ]);
 
-    setRectangles((rectangles) => [
-      ...rectangles,
-      {
-        id,
-        x,
-        y,
-        height: 80,
-        width: 120,
-        draggable: true,
-        cornerRadius: 25,
-      },
-    ]);
     }
+    setIsText(false)
+    //setIsCircle(false)
     setIsClicked(false);
   };
 
-  const onPointerMove = () => {
-    if (!isPainting.current) return; // Check if painting is happening
-
-    const stage = stageRef.current; // Now stageRef is properly linked
-    if (stage) {
-      const { x, y } = stage.getPointerPosition() as { x: number; y: number }; // Type the position
-
-    setRectangles((rectangles) =>
-      rectangles.map((rectangle) => {
-        if (rectangle.id === currentShapeId.current) {
-          return {
-            ...rectangle,
-            width: x - rectangle.x,
-            height: y - rectangle.y,
-          };
-        }
-        return rectangle;
-      })
-    );
+  // Select or deselect a rectangle
+  const handleSelect = (id: string | null) => {
+    setSelectedId(id);
+    if (id && transformerRef.current) {
+      const selectedNode = stageRef.current?.findOne(`#${id}`);
+      console.log(transformerRef.current)
+      transformerRef.current.nodes(selectedNode ? [selectedNode] : []);
+      transformerRef.current.getLayer()?.batchDraw();
     }
-    //setIsClicked(false)
   };
 
+  // Update rectangle dimensions on drag or transform
+  const updateRectangleDimensions = (
+    id: string,
+    width: number,
+    height: number
+  ) => {
+    setRectangles((prev) =>
+      prev.map((rect) =>
+        rect.id === id ? { ...rect, width, height } : rect
+      )
+    );
+  };
+
+  // Handle pointer move to resize
+  const onPointerMove = () => {
+    if (!isPainting.current) return;
+
+    const stage = stageRef.current;
+    if (stage) {
+      const { x, y } = stage.getPointerPosition() as { x: number; y: number };
+
+      setRectangles((prev) =>
+        prev.map((rect) =>
+          rect.id === currentShapeId.current
+            ? { ...rect, width: x - rect.x, height: y - rect.y }
+            : rect
+        )
+      );
+    }
+  };
+
+  // Stop painting
   const onPointerUp = () => {
     isPainting.current = false;
   };
 
-  const handleRectClicked = () => {
-    console.log("Rect was clicke??")
-    setIsClicked(!isClicked)
-    console.log(isClicked);
+  const handleText = () => {
+    const stage  = stageRef.current;
+    if (stage && isText) {
+      const {x , y} = stage.getPointerPosition() as {x : number , y : number};
+      console.log(x , y);
+      setInputPos({x , y})
+    }
+    setIsText(!isText)
   }
 
-  const handleText = () => {
-    console.log("White board was clicked")
+  const addTextelement = (text: string) => {
+    if (inputPos) {
+      setText((prev) => [
+        ...prev , 
+        {
+          id: uuidv4(),
+          x: inputPos.x,
+          y: inputPos.y,
+          text,
+        }
+      ])
+      setInputPos(null)
+    }
   }
+
+  // Handle adding a new rectangle
+  const handleRectClicked = () => {
+    setIsClicked(!isClicked);
+    setIsClicked(true)
+  };
+
 
   return (
-    <div className='relative'>
-      <button type='submit' className='absolute top-4 left-[50%] z-10 border-2 p-[10px] rounded-[1rem] border-black' onClick={() =>handleRectClicked()}>Rectangle</button>
+    <div className="relative">
+      <div className="buttons absolute left-[50%] z-10 top-5">
+      <button
+        type="button"
+        className="z-10 border-2 p-[10px] rounded-[1rem] border-black"
+        onClick={handleRectClicked}
+      >
+      Rectangle
+      </button>
+      <button  className="p-[10px] rounded-[1rem] border-black border-2 ml-3" onClick={handleText}>Text</button> 
+      </div> 
+
       <Stage
-        onClick={handleText}
         width={window.innerWidth}
         height={window.innerHeight}
+        ref={stageRef}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onMouseDown={(e) => {
+          if (e.target === stageRef.current) {
+            handleSelect(null); // Deselect rectangle if click is outside any shape
+          }
+        }}
         onPointerDown={isClicked ? onPointerDown : undefined}
-        ref={stageRef} // Attach the ref to the Stage component
+        onClick={isText ? handleText: undefined}
       >
         <Layer>
-          <Rect
-            x={0}
-            y={0}
-            height={window.innerHeight}
-            width={window.innerWidth}
-            fill="lightgrey" // Fill color to see the background
-          />
+          {text.map((t) => (
+            <KonvaText key={t.id} x={t.x} y={t.y} text={t.text} fontSize={18} draggable fill="black"/>
+          ))}
+          {rectangles.map((rect) => (
+            <React.Fragment key={rect.id}>
+              <Rect
+                id={rect.id}
+                x={rect.x}
+                y={rect.y}
+                width={rect.width}
+                height={rect.height}
+                strokeWidth={3}
+                stroke="black"
+                cornerRadius={rect.cornerRadius}
+                draggable={rect.draggable}
+                onClick={() => handleSelect(rect.id)}
+                onTransformEnd={(e) => {
+                  const node = e.target as Konva.Rect;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
+                  node.scaleX(1);
+                  node.scaleY(1);
+                  updateRectangleDimensions(
+                    rect.id,
+                    node.width() * scaleX,
+                    node.height() * scaleY
+                  );
+                }}
+              />
 
-          {rectangles.map((rect, index) => (
-            <Rect
-              key={index}
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              strokeWidth={2}
-              stroke="black"
-              draggable={rect.draggable}
-              cornerRadius={rect.cornerRadius}
-            />
+              {selectedId === rect.id && (
+                <Transformer
+                  ref={transformerRef}
+                  resizeEnabled={true}
+                  rotateEnabled={false}
+                />
+              )}
+            </React.Fragment>
           ))}
         </Layer>
       </Stage>
+
+      {inputPos && (
+        <input style={{
+          position: 'absolute',
+          top: inputPos.y,
+          left: inputPos.x,
+          zIndex: 10,
+          
+        }}
+        onBlur={(e) => addTextelement(e.target.value)}
+          autoFocus
+        />
+      )}
     </div>
   );
 };
