@@ -1,10 +1,8 @@
 import './App.css'
 import { Canvas } from './parts/canvas'
-function App() {
+export const App = () => {
 
   return (
     <Canvas/>
   )
 }
-
-export default App

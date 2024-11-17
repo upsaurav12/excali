@@ -240,19 +240,19 @@ export const Canvas = () => {
 
       <div className="buttons absolute left-[50%] z-10 top-5 border-2 flex w-[300px] rounded-[1rem] justify-around h-[50px]">
 
-          <button type="button" onClick={() => handleToolClicked("Rectangle")}>
-            <RectangleHorizontal/>
+          <button type="button" aria-label="Rectangle" onClick={() => handleToolClicked("Rectangle")}>
+            <RectangleHorizontal />
           </button>
-          <button type="button" onClick={() => handleToolClicked("Circle")}>
+          <button type="button" aria-label="Circle" onClick={() => handleToolClicked("Circle")}>
             <C/>
           </button>
-          <button type="button"  onClick={() => handleToolClicked("Arrow")}>
+          <button type="button" aria-label="Arrow" onClick={() => handleToolClicked("Arrow")}>
             <MoveUpRight/>
           </button>
-          <button type="button"  onClick={() => handleToolClicked("Line")}>
+          <button type="button"  aria-label="Line" onClick={() => handleToolClicked("Line")}>
             <Spline/>
           </button>
-          <button   onClick={() => handleToolClicked("Text")}>
+          <button  aria-label="Text" onClick={() => handleToolClicked("Text")}>
             <Type/>
           </button>
 
@@ -263,6 +263,7 @@ export const Canvas = () => {
       </div> 
 
       <Stage
+        role="region"
         width={window.innerWidth}
         height={window.innerHeight}
         ref={stageRef}
