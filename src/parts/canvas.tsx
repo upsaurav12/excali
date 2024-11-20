@@ -25,8 +25,6 @@ export const Canvas = () => {
   const [isLine , setIsLine] = useState<boolean>(false);
   const [lines , setLines] = useState<Lines[]>([])
   const [isDelete , setIsDelete] = useState<boolean>(false);
-
-
   // Add a new rectangle
   const onPointerDown = () => {
     const stage = stageRef.current;
@@ -218,9 +216,61 @@ export const Canvas = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if(e.key === 'Delete') {
-        handleDelete();
-      };
+      const id = uuidv4();
+      currentShapeId.current = id;
+
+      switch (e.key.toLowerCase()) {
+        case 'r':
+          setSelectedShape("Rectangle");
+          setIsClicked(false);
+          setRectangles((prev) => [
+            ...prev , 
+            {
+              id,
+              x: 150,
+              y: 150,
+              height:80,
+              width: 120,
+              draggable: true,
+              cornerRadius: 25,
+            }
+          ])
+          break  
+        case 'c' :
+          setSelectedShape('Circle');
+          setIsCircle(false)
+          setCircle((prev) => [
+            ...prev , {
+              id,
+              x: 300,
+              y: 300,
+              radius: 100
+            }
+          ])
+          break  
+        case 'a' :
+          setSelectedShape('Arrow');
+          setIsArrow(false)
+          setArrows((prev) => [
+            ...prev , {
+              id,
+              points: [400 , 400 , 450 , 450],
+            }
+          ])
+          break
+        case 'l' :
+          setSelectedShape('Line');
+          setIsLine(false)
+          setLines((prev) => [
+            ...prev , {
+              id,
+              points : [500 , 500 , 550 , 550],
+            }
+          ])
+          break
+      default:
+        break;
+      }
     }
 
     window.addEventListener('keydown' , handleKeyDown)
