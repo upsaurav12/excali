@@ -1,5 +1,5 @@
 import './App.css'
-import { Canvas } from './parts/canvas'
+import { Canvas } from './parts/drawing/canvas'
 export const App = () => {
 
   return (

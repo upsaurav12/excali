@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect , useCallback } from "react";
-import { Stage, Layer, Rect, Transformer , Text as KonvaText, Circle , Arrow  , Line} from "react-konva";
-import {  RectangleHorizontal ,MoveUpRight, Spline, Type, Circle as C} from 'lucide-react';
+import{ useState, useRef, useEffect , useCallback } from "react";
+import { Stage, Layer, Transformer } from "react-konva";
 import { Rectangles ,Lines ,Arrows , Circles , Texts } from "./type";
 import { v4 as uuidv4 } from "uuid";
 import Konva from "konva";
+import { Shapes } from "./shapes";
+import { Toolbar } from "./toolbar";
 
 
 export const Canvas = () => {
@@ -282,36 +283,9 @@ export const Canvas = () => {
   return (
     <div className="relative">
 
-      {/*}
-      <button style={{display: isDelete ? 'block' : 'none'}} onClick={handleDelete}>
-        <Trash2/>
-      </button>*/}
-
-
-      <div className="buttons absolute left-[50%] z-10 top-5 border-2 flex w-[300px] rounded-[1rem] justify-around h-[50px]">
-
-          <button type="button" aria-label="Rectangle" onClick={() => handleToolClicked("Rectangle")}>
-            <RectangleHorizontal />
-          </button>
-          <button type="button" aria-label="Circle" onClick={() => handleToolClicked("Circle")}>
-            <C/>
-          </button>
-          <button type="button" aria-label="Arrow" onClick={() => handleToolClicked("Arrow")}>
-            <MoveUpRight/>
-          </button>
-          <button type="button"  aria-label="Line" onClick={() => handleToolClicked("Line")}>
-            <Spline/>
-          </button>
-          <button  aria-label="Text" onClick={() => handleToolClicked("Text")}>
-            <Type/>
-          </button>
-
-          {/*}
-      {shapes.map((val , idx) => (
-        <button className="border-2 border-black p-2 rounded-[0.4rem] ml-2" onClick={() => handleRectClicked(val.type)} key={idx}>{val.type}</button>
-      ))}*/}
-      </div> 
-
+      <Toolbar
+      onToolSelect={handleToolClicked}
+      />
       <Stage
         role="region"
         width={window.innerWidth}
@@ -329,76 +303,20 @@ export const Canvas = () => {
       >
         <Layer>
 
-          {lines.map((l) => (
-            <Line 
-            id={l.id}
-            points={[l.points[0] , l.points[1] , l.points[2] , l.points[3]]}
-            stroke="black"
-            strokeWidth={3}
-            draggable
-            onClick={() => handleSelect(l.id )}
-            />
-          ))}
-          {text.map((t) => (
-            <KonvaText key={t.id} x={t.x} y={t.y} text={t.text} fontSize={18} draggable fill="black" onClick={() => handleSelect(t.id)}/>
-          ))}
-
-          {arrows.map((arrow) => (
-            <Arrow id={arrow.id} points={[arrow.points[0] , arrow.points[1] , arrow.points[2] , arrow.points[3]]}
-            stroke="black"
-            strokeWidth={3}
-            draggable
-            onClick={() => handleSelect(arrow.id )}
-            />
-          ))}
-
-          {circles.map((circle) => (
-            <Circle 
-            id={circle.id}
-            x={circle.x}
-            y={circle.y}
-            radius={circle.radius}
-            stroke="black"
-            strokeWidth={3}
-            onClick={() => handleSelect(circle.id )}
-            draggable
-            
-            />
-          ))}
-          {rectangles.map((rect) => (
-            <React.Fragment key={rect.id}>
-              <Rect
-                id={rect.id}
-                x={rect.x}
-                y={rect.y}
-                width={rect.width}
-                height={rect.height}
-                strokeWidth={3}
-                stroke="black"
-                
-                cornerRadius={rect.cornerRadius}
-                draggable={rect.draggable}
-                onClick={() => handleSelect(rect.id)}
-                onTransformEnd={(e) => {
-                  const node = e.target as Konva.Rect;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  node.scaleX(1);
-                  node.scaleY(1);
-                  updateRectangleDimensions(
-                    rect.id,
-                    node.width() * scaleX,
-                    node.height() * scaleY,
-                  );
-                }}
-              />
-            </React.Fragment>
-          ))}
+          <Shapes 
+          rectangles={rectangles}
+          circles={circles}
+          arrows={arrows}
+          lines={lines}
+          texts={text}
+          onShapeSelect={handleSelect}
+          updateRectangleDimensions={updateRectangleDimensions}
+          />
           {selectedId && (
                 <Transformer
                   ref={transformerRef}
                   resizeEnabled={true}
-                  rotateEnabled={false}
+                  rotateEnabled={true}
                   anchorSize={6}
                 />
               )}

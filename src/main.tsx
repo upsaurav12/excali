@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { Canvas } from './parts/canvas.tsx'
+import { Canvas } from './parts/drawing/canvas.tsx'
 //import App from './App.tsx'
 import {
   createBrowserRouter,
