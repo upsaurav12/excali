@@ -10,14 +10,18 @@ import { Toolbar } from "./toolbar";
 export const Canvas = () => {
   const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
+
+
   const [rectangles, setRectangles] = useState<Rectangles[]>([]);
   const [isClicked, setIsClicked] = useState<boolean>(false);
+  const [activeInput , setActiveInput] = useState<string | null>(null);
   const [isText , setIsText ] = useState<boolean> (false);
   const [selectedShape , setSelectedShape] = useState<string | null >("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const isPainting = useRef(false);
   const [inputPos , setInputPos] = useState<{x: number , y: number} | null>(null)
   const [text , setText] = useState<Texts[]>([]);
+  const [inputisActive , setInputisActive] = useState<boolean>(false);
   const currentShapeId = useRef<string | undefined>(undefined);
   const [circles , setCircle] = useState<Circles[]>([])
   const [isCircle , setIsCircle] = useState<boolean>(false)
@@ -26,6 +30,8 @@ export const Canvas = () => {
   const [isLine , setIsLine] = useState<boolean>(false);
   const [lines , setLines] = useState<Lines[]>([])
   const [isDelete , setIsDelete] = useState<boolean>(false);
+  const [inputArray , setInputArray] = useState<{x: number , y: number , height:number , width:number}[]>([]);
+
   // Add a new rectangle
   const onPointerDown = () => {
     const stage = stageRef.current;
@@ -45,7 +51,7 @@ export const Canvas = () => {
             height: 80,
             width: 120,
             draggable: true,
-            cornerRadius: 25,
+            cornerRadius: 10,
           },
         ]);
       }else if (selectedShape === 'Circle') {
@@ -88,7 +94,6 @@ export const Canvas = () => {
     setIsDelete(!isDelete)
     if (id && transformerRef.current) {
       const selectedNode = stageRef.current?.findOne(`#${id}`);
-      console.log(transformerRef.current)
       transformerRef.current.nodes(selectedNode ? [selectedNode] : []);
       transformerRef.current.getLayer()?.batchDraw();
     }
@@ -110,8 +115,6 @@ export const Canvas = () => {
     const stage = stageRef.current;
     if (stage) {
       const { x, y } = stage.getPointerPosition() as { x: number; y: number };
-
-      console.log("Pointer moved:", { x, y, selectedShape });
         if (selectedShape == 'Rectangle') {
           setRectangles((prev) =>
             prev.map((rect) =>
@@ -153,7 +156,6 @@ export const Canvas = () => {
     const stage  = stageRef.current;
     if (stage && isText) {
       const {x , y} = stage.getPointerPosition() as {x : number , y : number};
-      console.log(x , y);
       setInputPos({x , y})
     }
     setIsText(!isText)
@@ -190,9 +192,72 @@ export const Canvas = () => {
     }
   }
 
+  const stringToShape = (input: string | null) => {
+    const matches = input?.match(/r:h-(\d+)\s*w-(\d+)(?:\s*l-(\d+))?\s*x-(\d+)\s*y-(\d+)/);
+
+    if (matches) {
+      const height1 = Number(matches[1]);
+    const width1 = Number(matches[2]);
+    const x1 = Number(matches[4]);
+    const y1 = Number(matches[5]);
+    setInputArray((prev) => [
+      ...prev , {
+        width: width1,
+        height: height1,
+        x: x1,
+        y:y1
+      }
+    ])
+    console.log(inputArray)
+     return { height1, width1, x1, y1 };
+    }
+
+
+    return null
+  }
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    // Parse the input expression to extract the shape properties
+    const parsedValues = stringToShape(activeInput);
+  
+    if (parsedValues) {
+      // Extract the parsed values (height, width, x, y)
+  
+      // Log to check the parsed values
+
+      const { height1, width1, x1, y1 } = parsedValues;
+      console.log("Shape properties:", { height1, width1, x1, y1 });
+  
+      // Create the rectangle using the parsed values
+      const id = uuidv4(); // Unique ID for the shape
+  
+      // Add the new rectangle to the state
+      setRectangles((prev) => [
+        ...prev,
+        {
+          id,
+          x: x1, // x position from input
+          y : y1, // y position from input
+          width: width1, // width from input
+          height: height1, // height from input
+          draggable: true, // Make the shape draggable
+          cornerRadius: 10, // Optional corner radius for the rectangle
+        },
+      ]);
+  
+      // Optionally clear the input field after submission
+      setActiveInput("");
+    } else {
+      // Handle invalid input
+      console.log("Invalid input format.");
+    }
+  };
+  
+
   const handleDelete = useCallback(() => {
     if (selectedShape && selectedId) {
-      console.log("Deleting", { selectedShape, selectedId });
       switch (selectedShape) {
         case "Rectangle":
           setRectangles((prev) => prev.filter((rect) => rect.id !== selectedId));
@@ -213,64 +278,76 @@ export const Canvas = () => {
       setSelectedShape(null);
     }
   }, [selectedShape, selectedId, setRectangles, setCircle, setArrows, setLines]);
-  
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const id = uuidv4();
       currentShapeId.current = id;
+/*
+        switch (e.key.toLowerCase()) {
+          case 'r':
+            { setIsClicked(false);
+            setSelectedShape("Rectangle")
 
+            const rectProps = inputArray.length > 0 ? inputArray[inputArray.length - 1] : { x: 150, y: 150, width: 120, height: 80 };
+            
+            setRectangles((prev) => [
+              ...prev , 
+              {
+                id,
+                x: rectProps.x,
+                y: rectProps.y,
+                height:rectProps.height,
+                width: rectProps.width,
+                draggable: true,
+                cornerRadius: 25,
+              }
+            ])
+            break }  
+          case 'c' :
+            setSelectedShape('Circle');
+            setIsCircle(false)
+            setCircle((prev) => [
+              ...prev , {
+                id,
+                x: 300,
+                y: 300,
+                radius: 100
+              }
+            ])
+            break  
+          case 'a' :
+            setSelectedShape('Arrow');
+            setIsArrow(false)
+            setArrows((prev) => [
+              ...prev , {
+                id,
+                points: [400 , 400 , 450 , 450],
+              }
+            ])
+            break
+          case 'l' :
+            setSelectedShape('Line');
+            setIsLine(false)
+            setLines((prev) => [
+              ...prev , {
+                id,
+                points : [500 , 500 , 550 , 550],
+              }
+            ])
+            break
+        default:
+          break;
+        }
+*/
+      
       switch (e.key.toLowerCase()) {
-        case 'r':
-          setSelectedShape("Rectangle");
-          setIsClicked(false);
-          setRectangles((prev) => [
-            ...prev , 
-            {
-              id,
-              x: 150,
-              y: 150,
-              height:80,
-              width: 120,
-              draggable: true,
-              cornerRadius: 25,
-            }
-          ])
-          break  
-        case 'c' :
-          setSelectedShape('Circle');
-          setIsCircle(false)
-          setCircle((prev) => [
-            ...prev , {
-              id,
-              x: 300,
-              y: 300,
-              radius: 100
-            }
-          ])
-          break  
-        case 'a' :
-          setSelectedShape('Arrow');
-          setIsArrow(false)
-          setArrows((prev) => [
-            ...prev , {
-              id,
-              points: [400 , 400 , 450 , 450],
-            }
-          ])
+        case 'p' :
+          setInputisActive(true)
           break
-        case 'l' :
-          setSelectedShape('Line');
-          setIsLine(false)
-          setLines((prev) => [
-            ...prev , {
-              id,
-              points : [500 , 500 , 550 , 550],
-            }
-          ])
-          break
-      default:
-        break;
+        default:
+          break;  
       }
     }
 
@@ -322,6 +399,20 @@ export const Canvas = () => {
               )}
         </Layer>
       </Stage>
+
+      <form action="" style={{display: inputisActive ? 'block' : 'none'}} onSubmit={handleSubmit} className="absolute left-[40%] w-[35%] bottom-[10%] flex justify-around">
+        <input type="text" style={{
+          zIndex: 9999, // Ensure it's above other elements
+          background: 'white', // Ensure visibility
+        }} 
+        value={activeInput ?? ""}
+        className="border-2 border-black p-3 w-[60%] rounded-[0.75rem] outline-none"
+        onChange={(e) => setActiveInput(e.target.value)}
+        />
+
+        <button type="submit" className="border-2 border-black px-5 h-[50px] mt-1 rounded-[0.75rem] ml-[10%]">Click</button>
+      </form>
+
 
       {inputPos && (
         <input style={{
