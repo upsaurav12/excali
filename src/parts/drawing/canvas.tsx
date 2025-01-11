@@ -89,7 +89,7 @@ export const Canvas = () => {
   };
 
   // Select or deselect a rectangle
-  const handleSelect = (id: string | null) => {
+  const handleSelect = useCallback((id: string | null) => {
     setSelectedId(id);
     setIsDelete(!isDelete)
     if (id && transformerRef.current) {
@@ -97,7 +97,7 @@ export const Canvas = () => {
       transformerRef.current.nodes(selectedNode ? [selectedNode] : []);
       transformerRef.current.getLayer()?.batchDraw();
     }
-  };
+  } ,[isDelete]);
 
   // Update rectangle dimensions on drag or transform
   const updateRectangleDimensions = (id: string,width: number, height: number) => {
@@ -254,7 +254,6 @@ export const Canvas = () => {
       console.log("Invalid input format.");
     }
   };
-  
 
   const handleDelete = useCallback(() => {
     if (selectedShape && selectedId) {
@@ -391,10 +390,12 @@ export const Canvas = () => {
           />
           {selectedId && (
                 <Transformer
+                
                   ref={transformerRef}
                   resizeEnabled={true}
                   rotateEnabled={true}
                   anchorSize={6}
+                  padding={10}
                 />
               )}
         </Layer>
