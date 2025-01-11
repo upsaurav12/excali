@@ -89,15 +89,24 @@ export const Canvas = () => {
   };
 
   // Select or deselect a rectangle
-  const handleSelect = useCallback((id: string | null) => {
-    setSelectedId(id);
-    setIsDelete(!isDelete)
-    if (id && transformerRef.current) {
-      const selectedNode = stageRef.current?.findOne(`#${id}`);
-      transformerRef.current.nodes(selectedNode ? [selectedNode] : []);
-      transformerRef.current.getLayer()?.batchDraw();
-    }
-  } ,[isDelete]);
+  const handleSelect = useCallback(
+    (id: string | null) => {
+      setSelectedId(id);
+      setIsDelete(!isDelete);
+  
+      if (id && transformerRef.current) {
+        const selectedNode = stageRef.current?.findOne(`#${id}`);
+        if (selectedNode) {
+          transformerRef.current.nodes([selectedNode]); // Attach the Transformer to the selected shape
+          transformerRef.current.getLayer()?.batchDraw();
+        }
+      } else if (transformerRef.current) {
+        transformerRef.current.nodes([]); // Deselect Transformer
+      }
+    },
+    [isDelete]
+  );
+  
 
   // Update rectangle dimensions on drag or transform
   const updateRectangleDimensions = (id: string,width: number, height: number) => {
@@ -385,7 +394,7 @@ export const Canvas = () => {
           arrows={arrows}
           lines={lines}
           texts={text}
-          onShapeSelect={handleSelect}
+          onShapeSelect={(id) => handleSelect(id)}
           updateRectangleDimensions={updateRectangleDimensions}
           />
           {selectedId && (
