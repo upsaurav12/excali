@@ -12,6 +12,7 @@ export const Shapes = React.memo(
     texts,
     onShapeSelect,
     updateRectangleDimensions,
+    updateTextDimensions
   }: {
     rectangles: Rectangles[];
     circles: Circles[];
@@ -20,6 +21,7 @@ export const Shapes = React.memo(
     texts: Texts[];
     onShapeSelect: (id: string | null) => void;
     updateRectangleDimensions: (id: string, width: number, height: number) => void;
+    updateTextDimensions: (id: string, width: number, height: number) => void;
   }) => (
     <>
       {rectangles.map((rect) => (
@@ -73,6 +75,9 @@ export const Shapes = React.memo(
           points={line.points}
           stroke="black"
           draggable
+          tension={1}
+          lineCap="round"
+          lineJoin="round"
           onClick={() => onShapeSelect(line.id)}
         />
       ))}
@@ -80,6 +85,7 @@ export const Shapes = React.memo(
         <KonvaText
           key={text.id}
           x={text.x}
+          id={text.id}
           y={text.y}
           text={text.text}
           fontSize={18}
